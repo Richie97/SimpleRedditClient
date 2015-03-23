@@ -7,7 +7,11 @@ import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -28,7 +32,10 @@ public class SubredditFragment extends ListFragment implements LoaderManager.Loa
         super.onViewCreated(view, savedInstanceState);
         getListView().setDivider(null);
         getListView().setDrawSelectorOnTop(true);
-        getLoaderManager().initLoader(0, null, this);
+        Bundle args = new Bundle();
+        args.putString("subreddit", "android");
+        getLoaderManager().initLoader(0, args, this);
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -45,8 +52,29 @@ public class SubredditFragment extends ListFragment implements LoaderManager.Loa
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_search, menu);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.search));
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                Bundle b = new Bundle();
+                b.putString("subreddit", s);
+                getLoaderManager().restartLoader(0, b, SubredditFragment.this);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                return false;
+            }
+        });
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
     public Loader<RedditData> onCreateLoader(int id, Bundle args) {
-        return new SubredditLoader(getActivity());
+        return new SubredditLoader(getActivity(), args.getString("subreddit"));
     }
 
     @Override
